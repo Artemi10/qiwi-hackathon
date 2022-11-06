@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 2424285
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pg_hba.conf:/var/lib/data/pg_hba.conf
+      - ./init.sql:/docker-entrypoint-initdb.d/1.sql
