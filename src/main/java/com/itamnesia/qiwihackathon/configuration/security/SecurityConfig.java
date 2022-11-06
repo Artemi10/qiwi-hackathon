@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptionHandlingConfig -> exceptionHandlingConfig
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeRequests(authorizeRequestsConfig -> authorizeRequestsConfig
-                        .antMatchers("/api/auth/**").permitAll()
+                        .antMatchers("/api/auth/**", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                         .anyRequest().hasAuthority(Role.ACTIVE.name())
                 )
                 .build();
