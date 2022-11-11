@@ -18,4 +18,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     default boolean existsByLogin(String login) {
         return findByLogin(login).isPresent();
     }
+
+    @Query("""
+        SELECT user
+        FROM User user
+        WHERE user.phoneNumber = :phoneNumber
+    """)
+    Optional<User> findByPhoneNumber(String phoneNumber);
+
+    default boolean existsByPhoneNumber(String phoneNumber) {
+        return findByPhoneNumber(phoneNumber).isPresent();
+    }
 }

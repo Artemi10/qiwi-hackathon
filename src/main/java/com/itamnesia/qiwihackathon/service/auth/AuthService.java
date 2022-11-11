@@ -1,12 +1,18 @@
 package com.itamnesia.qiwihackathon.service.auth;
 
-import com.itamnesia.qiwihackathon.transfer.auth.AuthDTO;
+import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
+import com.itamnesia.qiwihackathon.transfer.auth.LogInDTO;
+import com.itamnesia.qiwihackathon.transfer.auth.SignUpDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface AuthService {
-    TokenDTO signUp(AuthDTO signUp);
+    TokenDTO signUp(SignUpDTO signUpUser);
 
-    TokenDTO logIn(AuthDTO logInUser);
+    TokenDTO logIn(LogInDTO logInUser);
+
+    TokenDTO confirmClient(String phoneNumber, CodeDTO codeDTO);
+
+    TokenDTO confirmShop(String phoneNumber, CodeDTO codeDTO);
 }

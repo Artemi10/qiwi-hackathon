@@ -17,8 +17,13 @@ public class User {
     private Long id;
     @Column(name = "login")
     private String login;
+    @Column(name = "phone_number")
+    private String phoneNumber;
     @Column(name = "password")
     private String password;
+    @Column(name = "role")
     @Enumerated(value = EnumType.STRING)
     private Role role;
+    @Column(name = "confirm_token")
+    private String confirmToken;
 }

@@ -20,7 +20,7 @@ public record UserPrincipal(
     public UserPrincipal(User user) {
        this(
                user.getId(),
-               user.getLogin(),
+               user.getPhoneNumber(),
                user.getPassword(),
                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name())));
     }
