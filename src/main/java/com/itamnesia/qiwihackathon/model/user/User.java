@@ -26,4 +26,8 @@ public class User {
     private Role role;
     @Column(name = "confirm_token")
     private String confirmToken;
+    @Column(name = "account_id")
+    private String accountId;
+    @Column(name = "request_id")
+    private String requestId;
 }
