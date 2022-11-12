@@ -137,11 +137,12 @@ public class QiwiServiceImpl implements QiwiService {
         var body = new HttpEntity<>(request, header);
         var paymentId = UUID.randomUUID().toString();
         try {
-            var payment = restTemplate.postForObject(
+            var payment = restTemplate.exchange(
                     URL + "/payin/v1/sites/sa3khn-15/payments/" + paymentId,
+                    HttpMethod.PUT,
                     body,
                     Payment.class
-            );
+            ).getBody();
             System.out.println(payment);
             deletePayment(client);
         } catch (Exception exception) {
