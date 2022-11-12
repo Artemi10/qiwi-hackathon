@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenDTO createShopAccount(long id) {
         var user = userRepository.findById(id)
-                        .orElseThrow(() -> new AuthException("Code are incorrect"));
+                        .orElseThrow(() -> new AuthException("User not found"));
         user.setRole(Role.SHOP);
         var savedUser = userRepository.save(user);
         var tokenStr = accessTokenService.createAccessToken(savedUser);

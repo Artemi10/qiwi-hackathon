@@ -7,4 +7,6 @@ public interface QiwiService {
     void createPaymentRequest(long id);
 
     String confirmPayment(long id, String code);
+
+
 }
