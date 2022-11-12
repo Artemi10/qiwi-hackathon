@@ -11,17 +11,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
         SELECT user
         FROM User user
-        WHERE user.login = :login
-    """)
-    Optional<User> findByLogin(String login);
-
-    default boolean existsByLogin(String login) {
-        return findByLogin(login).isPresent();
-    }
-
-    @Query("""
-        SELECT user
-        FROM User user
         WHERE user.phoneNumber = :phoneNumber
     """)
     Optional<User> findByPhoneNumber(String phoneNumber);
