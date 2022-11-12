@@ -6,6 +6,7 @@ import com.itamnesia.qiwihackathon.service.qiwi.QiwiService;
 import com.itamnesia.qiwihackathon.service.auth.AuthService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
+import com.itamnesia.qiwihackathon.transfer.auth.TokensDTO;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -53,12 +54,11 @@ public class ClientAccountController {
             @ApiResponse(code = 401, message = "Can not send payment confirmation request"),
             @ApiResponse(code = 403, message = "Role is invalid (CLIENT)")
     })
-    public TokenDTO confirmPayment(
+    public TokensDTO confirmPayment(
             @RequestBody CodeDTO codeDTO,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        var paymentToken = qiwiService.confirmPayment(userPrincipal.id(), codeDTO.code());
-        return new TokenDTO(paymentToken);
+        return qiwiService.confirmPayment(userPrincipal.id(), codeDTO.code());
     }
 
 }

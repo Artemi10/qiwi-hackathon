@@ -39,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     public User deletePayment(User user) {
         user.setAccountId(null);
         user.setRequestId(null);
+        user.setPaymentToken(null);
         if (user.getRole().equals(Role.CLIENT_PAYMENT)) {
             user.setRole(Role.CLIENT);
         }

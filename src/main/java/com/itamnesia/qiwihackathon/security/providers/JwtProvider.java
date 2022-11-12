@@ -3,7 +3,7 @@ package com.itamnesia.qiwihackathon.security.providers;
 import com.itamnesia.qiwihackathon.security.JwtAuthenticationException;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
 import io.jsonwebtoken.JwtException;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,10 +13,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
 public class JwtProvider implements AuthenticationProvider {
     private final UserDetailsService userDetailsService;
     private final AccessTokenService accessTokenService;
+
+    public JwtProvider(
+            UserDetailsService userDetailsService,
+            @Qualifier("applicationAccessTokenService") AccessTokenService accessTokenService
+    ) {
+        this.userDetailsService = userDetailsService;
+        this.accessTokenService = accessTokenService;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {

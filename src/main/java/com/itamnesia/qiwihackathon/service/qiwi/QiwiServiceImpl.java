@@ -1,26 +1,56 @@
 package com.itamnesia.qiwihackathon.service.qiwi;
 
-
 import com.itamnesia.qiwihackathon.exception.AuthException;
+import com.itamnesia.qiwihackathon.model.Payment;
+import com.itamnesia.qiwihackathon.model.user.User;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
 import com.itamnesia.qiwihackathon.service.payment.PaymentService;
-import lombok.AllArgsConstructor;
+import com.itamnesia.qiwihackathon.transfer.auth.TokensDTO;
+import com.itamnesia.qiwihackathon.transfer.payment.PaymentRequest;
+import com.itamnesia.qiwihackathon.transfer.payment.PaymentResponse;
+import com.itamnesia.qiwihackathon.transfer.payment.confirmation.PaymentConfirmationRequest;
+import com.itamnesia.qiwihackathon.transfer.payment.confirmation.PaymentConfirmationResponse;
+import com.itamnesia.qiwihackathon.transfer.payment.token.DeletePaymentTokenRequest;
+import com.itamnesia.qiwihackathon.transfer.payment.transaction.Amount;
+import com.itamnesia.qiwihackathon.transfer.payment.transaction.Customer;
+import com.itamnesia.qiwihackathon.transfer.payment.transaction.PaymentMethod;
+import com.itamnesia.qiwihackathon.transfer.payment.transaction.QiwiTransactionRequest;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.UUID;
+
 @Service
-@AllArgsConstructor
 public class QiwiServiceImpl implements QiwiService {
     private final static String URL = "https://api.qiwi.com/partner";
     private final static String HEADER = "8a1e01ee-0482-4598-8b97-d4d79f767107";
 
     private final PaymentService paymentService;
-    private final AccessTokenService accessTokenService;
+    private final AccessTokenService paymentAccessTokenService;
+    private final AccessTokenService applicationAccessTokenService;
     private final RestTemplate restTemplate;
     private final UserRepository userRepository;
+
+    public QiwiServiceImpl(
+            PaymentService paymentService,
+            @Qualifier("paymentAccessTokenService")
+            AccessTokenService paymentAccessTokenService,
+            @Qualifier("applicationAccessTokenService")
+            AccessTokenService applicationAccessTokenService,
+            RestTemplate restTemplate,
+            UserRepository userRepository
+    ) {
+        this.paymentService = paymentService;
+        this.paymentAccessTokenService = paymentAccessTokenService;
+        this.applicationAccessTokenService = applicationAccessTokenService;
+        this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public void createPaymentRequest(long id) {
@@ -55,7 +85,7 @@ public class QiwiServiceImpl implements QiwiService {
     }
 
     @Override
-    public String confirmPayment(long id, String code) {
+    public TokensDTO confirmPayment(long id, String code) {
         var user = paymentService.getUserById(id);
         var confirmation = new PaymentConfirmationRequest(
                 user.getRequestId(),
@@ -80,7 +110,10 @@ public class QiwiServiceImpl implements QiwiService {
                 throw new AuthException("Can not send payment confirmation request");
             }
             var paymentUser = paymentService.startPayment(user, paymentResponse.token().value());
-            return accessTokenService.createAccessPaymentToken(paymentUser);
+            return new TokensDTO(
+                    applicationAccessTokenService.createToken(paymentUser),
+                    paymentAccessTokenService.createToken(paymentUser)
+            );
         } catch (Exception e) {
             paymentService.deletePayment(user);
             throw new AuthException("Can not send payment confirmation request");
@@ -88,30 +121,61 @@ public class QiwiServiceImpl implements QiwiService {
     }
 
     @Override
-    public void sendPayment(long shopId, String token) {
-        if (!accessTokenService.isValid(token)) {
+    public void sendPayment(long shopId, String token, long money) {
+        if (!paymentAccessTokenService.isValid(token)) {
             throw new AuthException("Client token is expired");
         }
-        var clientPhoneNumber = accessTokenService.getPhoneNumber(token);
-        var client = userRepository.findByPhoneNumber(clientPhoneNumber);
+        var client = userRepository
+                .findByPhoneNumber(paymentAccessTokenService.getPhoneNumber(token))
+                .orElseThrow(() -> new AuthException("Token is inavalid"));
+        var request = new QiwiTransactionRequest(
+                new Amount(money),
+                new Customer(client.getAccountId()),
+                new PaymentMethod(client.getPaymentToken())
+        );
+        var header = getHeaders();
+        var body = new HttpEntity<>(request, header);
+        var paymentId = UUID.randomUUID().toString();
+        try {
+            var payment = restTemplate.postForObject(
+                    URL + "/payin/v1/sites/sa3khn-15/payments/" + paymentId,
+                    body,
+                    Payment.class
+            );
+            System.out.println(payment);
+            deletePayment(client);
+        } catch (Exception exception) {
+            deletePayment(client);
+            throw new AuthException("Can not create transaction");
+        }
+    }
+
+    @Override
+    public void deletePayment(User user) {
+        var header = getHeaders();
+        var paymentToken = user.getPaymentToken();
+        if (paymentToken == null) return;
+        var deleteRequest = new DeletePaymentTokenRequest(paymentToken, user.getAccountId());
+        var body = new HttpEntity<>(deleteRequest, header);
+        try {
+            restTemplate.exchange(
+                    URL + "/payin/v1/sites/sa3khn-15/tokens",
+                    HttpMethod.DELETE,
+                    body,
+                    Void.class
+            );
+            paymentService.deletePayment(user);
+        } catch (Exception exception) {
+            throw new AuthException("Can not delete payment token");
+        }
     }
 
     private HttpHeaders getHeaders() {
         var header = new HttpHeaders();
         header.set("Authorization", "Bearer " + HEADER);
         header.set("Host", "api.qiwi.com");
+        header.set("Content-Type", "application/json");
+        header.set("Accept", "application/json");
         return header;
     }
-
-    private final record PaymentRequest(String requestId, String phone, String accountId) {}
-
-    private final record PaymentResponse(String requestId, StatusResponse status) {}
-
-    private final record StatusResponse(String value) {}
-
-    private final record PaymentConfirmationRequest(String requestId, String smsCode) {}
-
-    private final record PaymentConfirmationResponse(String requestId, StatusResponse status, TokenResponse token) {}
-
-    private final record TokenResponse(String value, String expiredDate) {}
 }

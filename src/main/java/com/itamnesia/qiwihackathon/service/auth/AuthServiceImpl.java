@@ -5,22 +5,34 @@ import com.itamnesia.qiwihackathon.model.user.Role;
 import com.itamnesia.qiwihackathon.model.user.User;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
-import com.itamnesia.qiwihackathon.service.payment.PaymentService;
+import com.itamnesia.qiwihackathon.service.qiwi.QiwiService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.LogInDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.SignUpDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessTokenService accessTokenService;
-    private final PaymentService paymentService;
+    private final QiwiService qiwiService;
+
+    public AuthServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Qualifier("applicationAccessTokenService")
+            AccessTokenService accessTokenService,
+            QiwiService qiwiService
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.accessTokenService = accessTokenService;
+        this.qiwiService = qiwiService;
+    }
 
     @Override
     public TokenDTO signUp(SignUpDTO signUpUser) {
@@ -35,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(Role.NOT_CONFIRMED)
                 .build();
         var savedUser = userRepository.save(newUser);
-        var tokenStr = accessTokenService.createAccessToken(savedUser);
+        var tokenStr = accessTokenService.createToken(savedUser);
         return new TokenDTO(tokenStr);
     }
 
@@ -44,8 +56,8 @@ public class AuthServiceImpl implements AuthService {
         var authUser = userRepository.findByPhoneNumber(logInUser.phoneNumber())
                 .filter(user -> passwordEncoder.matches(logInUser.password(), user.getPassword()))
                 .orElseThrow(() -> new AuthException("Credentials are invalid"));
-        paymentService.deletePayment(authUser);
-        var tokenStr = accessTokenService.createAccessToken(authUser);
+        qiwiService.deletePayment(authUser);
+        var tokenStr = accessTokenService.createToken(authUser);
         return new TokenDTO(tokenStr);
     }
 
@@ -57,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         authUser.setConfirmToken(null);
         authUser.setRole(Role.CLIENT);
         var user = userRepository.save(authUser);
-        var tokenStr = accessTokenService.createAccessToken(user);
+        var tokenStr = accessTokenService.createToken(user);
         return new TokenDTO(tokenStr);
     }
 
@@ -69,7 +81,7 @@ public class AuthServiceImpl implements AuthService {
         authUser.setConfirmToken(null);
         authUser.setRole(Role.SHOP);
         var user = userRepository.save(authUser);
-        var tokenStr = accessTokenService.createAccessToken(user);
+        var tokenStr = accessTokenService.createToken(user);
         return new TokenDTO(tokenStr);
     }
 
@@ -79,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
                         .orElseThrow(() -> new AuthException("User not found"));
         user.setRole(Role.SHOP);
         var savedUser = userRepository.save(user);
-        var tokenStr = accessTokenService.createAccessToken(savedUser);
+        var tokenStr = accessTokenService.createToken(savedUser);
         return new TokenDTO(tokenStr);
     }
 }
