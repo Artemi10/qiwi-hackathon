@@ -30,5 +30,6 @@ public class User {
     private String accountId;
     @Column(name = "request_id")
     private String requestId;
-
+    @Column(name = "payment_token")
+    private String paymentToken;
 }

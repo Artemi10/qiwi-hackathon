@@ -22,15 +22,27 @@ public class JwtService implements AccessTokenService {
     private String secretKey;
     @Value("${jwt.expired}")
     private Long validTimePeriod;
+    @Value("${jwt.payment.expired}")
+    private Long validPaymentTimePeriod;
     private final TimeService timeService;
 
     @Override
+    public String createAccessPaymentToken(User user) {
+        return createToken(user, validPaymentTimePeriod);
+    }
+
+    @Override
     public String createAccessToken(User user){
+        return createToken(user, validTimePeriod);
+    }
+
+
+    private String createToken(User user, Long period) {
         var claims = Jwts.claims()
                 .setSubject(user.getLogin());
         claims.put("role", user.getRole().name());
         var currentTime = timeService.now();
-        var expirationTime = currentTime.plusSeconds(validTimePeriod);
+        var expirationTime = currentTime.plusSeconds(period);
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(Date.from(currentTime.toInstant()))

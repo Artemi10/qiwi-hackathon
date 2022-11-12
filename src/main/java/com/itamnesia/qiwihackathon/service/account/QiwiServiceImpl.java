@@ -2,6 +2,7 @@ package com.itamnesia.qiwihackathon.service.account;
 
 
 import com.itamnesia.qiwihackathon.exception.AuthException;
+import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
 import com.itamnesia.qiwihackathon.service.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpEntity;
@@ -16,6 +17,7 @@ public class QiwiServiceImpl implements QiwiService {
     private final static String HEADER = "8a1e01ee-0482-4598-8b97-d4d79f767107";
 
     private final UserService userService;
+    private final AccessTokenService accessTokenService;
     private final RestTemplate restTemplate;
 
     @Override
@@ -75,11 +77,17 @@ public class QiwiServiceImpl implements QiwiService {
                 userService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
-            return paymentResponse.token().value();
+            var paymentUser = userService.startPayment(user, paymentResponse.token().value());
+            return accessTokenService.createAccessPaymentToken(paymentUser);
         } catch (Exception e) {
             userService.deletePayment(user);
             throw new AuthException("Can not send payment confirmation request");
         }
+    }
+
+    @Override
+    public void sendPayment(long id, String code) {
+
     }
 
     private HttpHeaders getHeaders() {

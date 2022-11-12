@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 public interface UserService {
     User generatePayment(long id);
 
-    void deletePayment(User user);
+    User deletePayment(User user);
 
     User getUserById(long id);
+
+    User startPayment(User user, String paymentToken);
 }

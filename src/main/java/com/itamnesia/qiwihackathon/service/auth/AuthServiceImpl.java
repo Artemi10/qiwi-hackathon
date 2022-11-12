@@ -5,6 +5,7 @@ import com.itamnesia.qiwihackathon.model.user.Role;
 import com.itamnesia.qiwihackathon.model.user.User;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
+import com.itamnesia.qiwihackathon.service.user.UserService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.LogInDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.SignUpDTO;
@@ -19,6 +20,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessTokenService accessTokenService;
+    private final UserService userService;
 
     @Override
     public TokenDTO signUp(SignUpDTO signUpUser) {
@@ -42,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
         var authUser = userRepository.findByPhoneNumber(logInUser.phoneNumber())
                 .filter(user -> passwordEncoder.matches(logInUser.password(), user.getPassword()))
                 .orElseThrow(() -> new AuthException("Credentials are invalid"));
+        userService.deletePayment(authUser);
         var tokenStr = accessTokenService.createAccessToken(authUser);
         return new TokenDTO(tokenStr);
     }

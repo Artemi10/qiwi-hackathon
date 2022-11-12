@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 public interface AccessTokenService {
     String createAccessToken(User user);
 
+    String createAccessPaymentToken(User user);
+
     String getLogin(String accessToken);
 
     String getRole(String accessToken);
