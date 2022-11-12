@@ -2,7 +2,7 @@ package com.itamnesia.qiwihackathon.controller;
 
 
 import com.itamnesia.qiwihackathon.security.details.UserPrincipal;
-import com.itamnesia.qiwihackathon.service.account.QiwiService;
+import com.itamnesia.qiwihackathon.service.qiwi.QiwiService;
 import com.itamnesia.qiwihackathon.service.auth.AuthService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;

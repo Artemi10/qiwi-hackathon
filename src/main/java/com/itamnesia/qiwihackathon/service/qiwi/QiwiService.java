@@ -1,4 +1,4 @@
-package com.itamnesia.qiwihackathon.service.account;
+package com.itamnesia.qiwihackathon.service.qiwi;
 
 import org.springframework.stereotype.Service;
 
@@ -8,5 +8,5 @@ public interface QiwiService {
 
     String confirmPayment(long id, String code);
 
-    void sendPayment(long id, String code);
+    void sendPayment(long shopId, String token);
 }

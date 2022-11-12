@@ -39,7 +39,7 @@ public class JwtService implements AccessTokenService {
 
     private String createToken(User user, Long period) {
         var claims = Jwts.claims()
-                .setSubject(user.getLogin());
+                .setSubject(user.getPhoneNumber());
         claims.put("role", user.getRole().name());
         var currentTime = timeService.now();
         var expirationTime = currentTime.plusSeconds(period);
@@ -51,7 +51,7 @@ public class JwtService implements AccessTokenService {
     }
 
     @Override
-    public String getLogin(String accessToken){
+    public String getPhoneNumber(String accessToken){
         try {
             return Jwts.parser()
                     .setClock(new FixedClock(Date.from(timeService.now().toInstant())))

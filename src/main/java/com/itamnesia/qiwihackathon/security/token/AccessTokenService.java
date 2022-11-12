@@ -9,7 +9,7 @@ public interface AccessTokenService {
 
     String createAccessPaymentToken(User user);
 
-    String getLogin(String accessToken);
+    String getPhoneNumber(String accessToken);
 
     String getRole(String accessToken);
 

@@ -1,4 +1,4 @@
-package com.itamnesia.qiwihackathon.service.user;
+package com.itamnesia.qiwihackathon.service.payment;
 
 import com.itamnesia.qiwihackathon.exception.AuthException;
 import com.itamnesia.qiwihackathon.model.user.Role;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class UserServiceImpl implements UserService {
+public class PaymentServiceImpl implements PaymentService {
     private final TokenGenerator tokenGenerator;
     private final UserRepository userRepository;
 

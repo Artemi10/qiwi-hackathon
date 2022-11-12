@@ -28,7 +28,7 @@ public class JwtProvider implements AuthenticationProvider {
             if (!accessTokenService.isValid(accessToken)) {
                 throw new JwtAuthenticationException();
             }
-            var login = accessTokenService.getLogin(accessToken);
+            var login = accessTokenService.getPhoneNumber(accessToken);
             var role = accessTokenService.getRole(accessToken);
             var principal = userDetailsService.loadUserByUsername(login);
             var hasAuthority = principal.getAuthorities().stream()

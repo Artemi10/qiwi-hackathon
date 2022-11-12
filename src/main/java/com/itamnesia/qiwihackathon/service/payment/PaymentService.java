@@ -1,10 +1,10 @@
-package com.itamnesia.qiwihackathon.service.user;
+package com.itamnesia.qiwihackathon.service.payment;
 
 import com.itamnesia.qiwihackathon.model.user.User;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface UserService {
+public interface PaymentService {
     User generatePayment(long id);
 
     User deletePayment(User user);

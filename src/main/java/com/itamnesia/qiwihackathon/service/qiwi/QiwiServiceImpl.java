@@ -1,9 +1,10 @@
-package com.itamnesia.qiwihackathon.service.account;
+package com.itamnesia.qiwihackathon.service.qiwi;
 
 
 import com.itamnesia.qiwihackathon.exception.AuthException;
+import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
-import com.itamnesia.qiwihackathon.service.user.UserService;
+import com.itamnesia.qiwihackathon.service.payment.PaymentService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,13 +17,14 @@ public class QiwiServiceImpl implements QiwiService {
     private final static String URL = "https://api.qiwi.com/partner";
     private final static String HEADER = "8a1e01ee-0482-4598-8b97-d4d79f767107";
 
-    private final UserService userService;
+    private final PaymentService paymentService;
     private final AccessTokenService accessTokenService;
     private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
 
     @Override
     public void createPaymentRequest(long id) {
-        var user = userService.generatePayment(id);
+        var user = paymentService.generatePayment(id);
         var payment = new PaymentRequest(
                 user.getRequestId(),
                 user.getPhoneNumber(),
@@ -38,23 +40,23 @@ public class QiwiServiceImpl implements QiwiService {
                             PaymentResponse.class
                     );
             if (paymentResponse == null) {
-                userService.deletePayment(user);
+                paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment request");
             }
             var status = paymentResponse.status();
             if (!"WAITING_SMS".equals(status.value())) {
-                userService.deletePayment(user);
+                paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment request");
             }
         } catch (Exception e) {
-            userService.deletePayment(user);
+            paymentService.deletePayment(user);
             throw new AuthException("Can not send payment request");
         }
     }
 
     @Override
     public String confirmPayment(long id, String code) {
-        var user = userService.getUserById(id);
+        var user = paymentService.getUserById(id);
         var confirmation = new PaymentConfirmationRequest(
                 user.getRequestId(),
                 code
@@ -69,25 +71,29 @@ public class QiwiServiceImpl implements QiwiService {
                             PaymentConfirmationResponse.class
                     );
             if (paymentResponse == null) {
-                userService.deletePayment(user);
+                paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
             var status = paymentResponse.status();
             if (!"CREATED".equals(status.value())) {
-                userService.deletePayment(user);
+                paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
-            var paymentUser = userService.startPayment(user, paymentResponse.token().value());
+            var paymentUser = paymentService.startPayment(user, paymentResponse.token().value());
             return accessTokenService.createAccessPaymentToken(paymentUser);
         } catch (Exception e) {
-            userService.deletePayment(user);
+            paymentService.deletePayment(user);
             throw new AuthException("Can not send payment confirmation request");
         }
     }
 
     @Override
-    public void sendPayment(long id, String code) {
-
+    public void sendPayment(long shopId, String token) {
+        if (!accessTokenService.isValid(token)) {
+            throw new AuthException("Client token is expired");
+        }
+        var clientPhoneNumber = accessTokenService.getPhoneNumber(token);
+        var client = userRepository.findByPhoneNumber(clientPhoneNumber);
     }
 
     private HttpHeaders getHeaders() {
