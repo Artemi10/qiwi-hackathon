@@ -15,4 +15,6 @@ public interface AuthService {
     TokenDTO confirmClient(String phoneNumber, CodeDTO codeDTO);
 
     TokenDTO confirmShop(String phoneNumber, CodeDTO codeDTO);
+
+    TokenDTO createShopAccount(long id);
 }

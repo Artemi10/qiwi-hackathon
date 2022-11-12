@@ -3,6 +3,7 @@ package com.itamnesia.qiwihackathon.controller;
 
 import com.itamnesia.qiwihackathon.security.details.UserPrincipal;
 import com.itamnesia.qiwihackathon.service.account.QiwiService;
+import com.itamnesia.qiwihackathon.service.auth.AuthService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
 import io.swagger.annotations.ApiOperation;
@@ -17,6 +18,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/client/account")
 public class ClientAccountController {
     private final QiwiService qiwiService;
+    private final AuthService authService;
+
+    @GetMapping("/shop")
+    @ApiOperation("Create shop account")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Ok", response = TokenDTO.class),
+            @ApiResponse(code = 401, message = "User not found"),
+            @ApiResponse(code = 403, message = "Role is invalid (CLIENT)")
+    })
+    public TokenDTO createShopAccount(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        return authService.createShopAccount(userPrincipal.id());
+    }
 
     @GetMapping("/payment")
     @ApiOperation("Send payment confirmation")

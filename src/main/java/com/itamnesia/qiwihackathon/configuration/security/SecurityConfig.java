@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .authorizeRequests(authorizeRequestsConfig -> authorizeRequestsConfig
                         .antMatchers("/api/auth/**", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                         .antMatchers("/api/confirmation").hasAuthority(Role.NOT_CONFIRMED.name())
-                        .antMatchers("/api/client/***").hasAuthority(Role.CLIENT.name())
+                        .antMatchers("/api/client/***").hasAnyAuthority(Role.CLIENT.name(), Role.SHOP.name())
                         .anyRequest().authenticated()
                 )
                 .build();
