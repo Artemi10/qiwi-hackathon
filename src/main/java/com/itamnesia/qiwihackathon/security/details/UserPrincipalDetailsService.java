@@ -15,7 +15,7 @@ public class UserPrincipalDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByLogin(username)
+        return userRepository.findByPhoneNumber(username)
                 .map(UserPrincipal::new)
                 .orElseThrow(() -> new BadCredentialsException("Credentials are invalid"));
     }
