@@ -8,5 +8,4 @@ public interface QiwiService {
 
     String confirmPayment(long id, String code);
 
-
 }
