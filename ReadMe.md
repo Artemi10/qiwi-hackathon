@@ -20,5 +20,11 @@
 - Создание аккаунта магазина
 - Хранение информации о совершённых платежах
 
+## Swagger
+- https://qiwi-hackathon.herokuapp.com/swagger-ui/#
+
+## Heroku
+- https://qiwi-hackathon.herokuapp.com
+
 ## Contact
 Email: lyah.artem10@mail.ru
