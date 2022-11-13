@@ -7,7 +7,7 @@ import com.itamnesia.qiwihackathon.repository.PaymentRepository;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
 import com.itamnesia.qiwihackathon.service.payment.PaymentService;
-import com.itamnesia.qiwihackathon.transfer.auth.TokensDTO;
+import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
 import com.itamnesia.qiwihackathon.transfer.payment.PaymentRequest;
 import com.itamnesia.qiwihackathon.transfer.payment.PaymentResponse;
 import com.itamnesia.qiwihackathon.transfer.payment.confirmation.PaymentConfirmationRequest;
@@ -18,6 +18,7 @@ import com.itamnesia.qiwihackathon.transfer.payment.transaction.Customer;
 import com.itamnesia.qiwihackathon.transfer.payment.transaction.PaymentMethod;
 import com.itamnesia.qiwihackathon.transfer.payment.transaction.QiwiTransactionRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,11 +30,13 @@ import java.util.UUID;
 @Service
 public class QiwiServiceImpl implements QiwiService {
     private final static String URL = "https://api.qiwi.com/partner";
-    private final static String HEADER = "8a1e01ee-0482-4598-8b97-d4d79f767107";
+    @Value("${qiwi.auth.header}")
+    private String authHeader;
+    @Value("${qiwi.auth.siteId}")
+    private String siteId;
 
     private final PaymentService paymentService;
     private final AccessTokenService paymentAccessTokenService;
-    private final AccessTokenService applicationAccessTokenService;
     private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
@@ -42,15 +45,12 @@ public class QiwiServiceImpl implements QiwiService {
             PaymentService paymentService,
             @Qualifier("paymentAccessTokenService")
             AccessTokenService paymentAccessTokenService,
-            @Qualifier("applicationAccessTokenService")
-            AccessTokenService applicationAccessTokenService,
             RestTemplate restTemplate,
             UserRepository userRepository,
             PaymentRepository paymentRepository
     ) {
         this.paymentService = paymentService;
         this.paymentAccessTokenService = paymentAccessTokenService;
-        this.applicationAccessTokenService = applicationAccessTokenService;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
@@ -69,7 +69,7 @@ public class QiwiServiceImpl implements QiwiService {
         try {
             var paymentResponse =
                     restTemplate.postForObject(
-                            URL + "/payin-tokenization-api/v1/sites/sa3khn-15/token-requests",
+                            "%s/payin-tokenization-api/v1/sites/%s/token-requests".formatted(URL, siteId),
                             body,
                             PaymentResponse.class
                     );
@@ -89,7 +89,7 @@ public class QiwiServiceImpl implements QiwiService {
     }
 
     @Override
-    public TokensDTO confirmPayment(long id, String code) {
+    public TokenDTO confirmPayment(long id, String code) {
         var user = paymentService.getUserById(id);
         var confirmation = new PaymentConfirmationRequest(
                 user.getRequestId(),
@@ -100,7 +100,7 @@ public class QiwiServiceImpl implements QiwiService {
         try {
             var paymentResponse =
                     restTemplate.postForObject(
-                            URL + "/payin-tokenization-api/v1/sites/sa3khn-15/token-requests/complete",
+                            "%s/payin-tokenization-api/v1/sites/%s/token-requests/complete".formatted(URL, siteId),
                             body,
                             PaymentConfirmationResponse.class
                     );
@@ -114,10 +114,7 @@ public class QiwiServiceImpl implements QiwiService {
                 throw new AuthException("Can not send payment confirmation request");
             }
             var paymentUser = paymentService.startPayment(user, paymentResponse.token().value());
-            return new TokensDTO(
-                    applicationAccessTokenService.createToken(paymentUser),
-                    paymentAccessTokenService.createToken(paymentUser)
-            );
+            return new TokenDTO(paymentAccessTokenService.createToken(paymentUser));
         } catch (Exception e) {
             paymentService.deletePayment(user);
             throw new AuthException("Can not send payment confirmation request");
@@ -142,7 +139,7 @@ public class QiwiServiceImpl implements QiwiService {
         var paymentId = UUID.randomUUID().toString();
         try {
             var payment = restTemplate.exchange(
-                    URL + "/payin/v1/sites/sa3khn-15/payments/" + paymentId,
+                    "%s/payin/v1/sites/%s/payments/%s".formatted(URL, siteId, paymentId),
                     HttpMethod.PUT,
                     body,
                     Payment.class
@@ -170,7 +167,7 @@ public class QiwiServiceImpl implements QiwiService {
         var body = new HttpEntity<>(deleteRequest, header);
         try {
             restTemplate.exchange(
-                    URL + "/payin/v1/sites/sa3khn-15/tokens",
+                    "%S/payin/v1/sites/%s/tokens".formatted(URL, siteId),
                     HttpMethod.DELETE,
                     body,
                     Void.class
@@ -183,7 +180,7 @@ public class QiwiServiceImpl implements QiwiService {
 
     private HttpHeaders getHeaders() {
         var header = new HttpHeaders();
-        header.set("Authorization", "Bearer " + HEADER);
+        header.set("Authorization", "Bearer " + authHeader);
         header.set("Host", "api.qiwi.com");
         header.set("Content-Type", "application/json");
         header.set("Accept", "application/json");
