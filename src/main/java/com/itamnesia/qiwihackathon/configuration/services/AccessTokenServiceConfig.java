@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class AccessTokenServiceConfig {
-    @Value("${jwt.access.expired}")
-    private Long paymentPeriod;
     @Value("${jwt.payment.expired}")
+    private Long paymentPeriod;
+    @Value("${jwt.access.expired}")
     private Long accessPeriod;
     private final TimeService timeService;
     private final TokenGenerator tokenGenerator;

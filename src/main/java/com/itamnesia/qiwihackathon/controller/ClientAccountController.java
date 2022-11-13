@@ -31,7 +31,7 @@ public class ClientAccountController {
     public TokenDTO createShopAccount(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody ShopDTO shopDTO
-            ) {
+    ) {
         return authService.createShopAccount(userPrincipal.id(), shopDTO);
     }
 
