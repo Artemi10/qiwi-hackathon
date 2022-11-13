@@ -4,6 +4,7 @@ import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.LogInDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.SignUpDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
+import com.itamnesia.qiwihackathon.transfer.shop.ShopDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,5 +17,5 @@ public interface AuthService {
 
     TokenDTO confirmShop(String phoneNumber, CodeDTO codeDTO);
 
-    TokenDTO createShopAccount(long id);
+    TokenDTO createShopAccount(long id, ShopDTO shopDTO);
 }

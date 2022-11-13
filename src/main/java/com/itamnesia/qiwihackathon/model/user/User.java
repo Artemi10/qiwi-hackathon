@@ -1,8 +1,10 @@
 package com.itamnesia.qiwihackathon.model.user;
 
+import com.itamnesia.qiwihackathon.model.Payment;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Setter
 @Getter
@@ -32,4 +34,16 @@ public class User {
     private String requestId;
     @Column(name = "payment_token")
     private String paymentToken;
+    @Column(name = "shop_name")
+    private String shopName;
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "purchaser"
+    )
+    private List<Payment> purchases;
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "shop"
+    )
+    private List<Payment> sales;
 }

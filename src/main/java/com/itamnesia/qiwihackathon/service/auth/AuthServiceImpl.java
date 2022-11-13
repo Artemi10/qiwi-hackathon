@@ -10,6 +10,7 @@ import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.LogInDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.SignUpDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
+import com.itamnesia.qiwihackathon.transfer.shop.ShopDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,10 +87,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokenDTO createShopAccount(long id) {
+    public TokenDTO createShopAccount(long id, ShopDTO shopDTO) {
         var user = userRepository.findById(id)
                         .orElseThrow(() -> new AuthException("User not found"));
         user.setRole(Role.SHOP);
+        user.setShopName(shopDTO.shopName());
         var savedUser = userRepository.save(user);
         var tokenStr = accessTokenService.createToken(savedUser);
         return new TokenDTO(tokenStr);

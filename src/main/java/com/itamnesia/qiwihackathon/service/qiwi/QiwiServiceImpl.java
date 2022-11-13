@@ -3,6 +3,7 @@ package com.itamnesia.qiwihackathon.service.qiwi;
 import com.itamnesia.qiwihackathon.exception.AuthException;
 import com.itamnesia.qiwihackathon.model.Payment;
 import com.itamnesia.qiwihackathon.model.user.User;
+import com.itamnesia.qiwihackathon.repository.PaymentRepository;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
 import com.itamnesia.qiwihackathon.service.payment.PaymentService;
@@ -35,6 +36,7 @@ public class QiwiServiceImpl implements QiwiService {
     private final AccessTokenService applicationAccessTokenService;
     private final RestTemplate restTemplate;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
     public QiwiServiceImpl(
             PaymentService paymentService,
@@ -43,13 +45,15 @@ public class QiwiServiceImpl implements QiwiService {
             @Qualifier("applicationAccessTokenService")
             AccessTokenService applicationAccessTokenService,
             RestTemplate restTemplate,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PaymentRepository paymentRepository
     ) {
         this.paymentService = paymentService;
         this.paymentAccessTokenService = paymentAccessTokenService;
         this.applicationAccessTokenService = applicationAccessTokenService;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -74,7 +78,7 @@ public class QiwiServiceImpl implements QiwiService {
                 throw new AuthException("Can not send payment request");
             }
             var status = paymentResponse.status();
-            if (!"WAITING_SMS".equals(status.value())) {
+            if (!"WAITING_SMS".equals(status.getValue())) {
                 paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment request");
             }
@@ -105,7 +109,7 @@ public class QiwiServiceImpl implements QiwiService {
                 throw new AuthException("Can not send payment confirmation request");
             }
             var status = paymentResponse.status();
-            if (!"CREATED".equals(status.value())) {
+            if (!"CREATED".equals(status.getValue())) {
                 paymentService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
@@ -143,7 +147,13 @@ public class QiwiServiceImpl implements QiwiService {
                     body,
                     Payment.class
             ).getBody();
-            System.out.println(payment);
+            if (payment == null) {
+                deletePayment(client);
+                throw new AuthException("Can not create transaction");
+            }
+            payment.setShop(User.builder().id(shopId).build());
+            payment.setPurchaser(User.builder().id(client.getId()).build());
+            paymentRepository.save(payment);
             deletePayment(client);
         } catch (Exception exception) {
             deletePayment(client);

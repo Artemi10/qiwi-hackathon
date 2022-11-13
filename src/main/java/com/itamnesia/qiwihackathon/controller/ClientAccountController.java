@@ -6,6 +6,7 @@ import com.itamnesia.qiwihackathon.service.auth.AuthService;
 import com.itamnesia.qiwihackathon.transfer.auth.CodeDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
 import com.itamnesia.qiwihackathon.transfer.auth.TokensDTO;
+import com.itamnesia.qiwihackathon.transfer.shop.ShopDTO;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -20,7 +21,7 @@ public class ClientAccountController {
     private final QiwiService qiwiService;
     private final AuthService authService;
 
-    @GetMapping("/shop")
+    @PostMapping("/shop")
     @ApiOperation("Create shop account")
     @ApiResponses({
             @ApiResponse(code = 200, message = "Ok", response = TokenDTO.class),
@@ -28,9 +29,10 @@ public class ClientAccountController {
             @ApiResponse(code = 403, message = "Role is invalid (CLIENT)")
     })
     public TokenDTO createShopAccount(
-            @AuthenticationPrincipal UserPrincipal userPrincipal
-    ) {
-        return authService.createShopAccount(userPrincipal.id());
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody ShopDTO shopDTO
+            ) {
+        return authService.createShopAccount(userPrincipal.id(), shopDTO);
     }
 
     @GetMapping("/payment")
