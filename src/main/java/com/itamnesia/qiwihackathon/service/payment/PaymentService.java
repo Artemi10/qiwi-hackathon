@@ -1,15 +1,13 @@
 package com.itamnesia.qiwihackathon.service.payment;
 
-import com.itamnesia.qiwihackathon.model.user.User;
+import com.itamnesia.qiwihackathon.model.Payment;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public interface PaymentService {
-    User generatePayment(long id);
+    List<Payment> findAllByShopId(long shopId);
 
-    User deletePayment(User user);
-
-    User getUserById(long id);
-
-    User startPayment(User user, String paymentToken);
+    List<Payment> findAllByPurchaserId(long purchaserId);
 }

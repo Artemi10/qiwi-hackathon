@@ -1,8 +1,8 @@
 package com.itamnesia.qiwihackathon.controller;
 
 import com.itamnesia.qiwihackathon.model.Payment;
-import com.itamnesia.qiwihackathon.repository.PaymentRepository;
 import com.itamnesia.qiwihackathon.security.details.UserPrincipal;
+import com.itamnesia.qiwihackathon.service.payment.PaymentService;
 import com.itamnesia.qiwihackathon.transfer.PaymentDTO;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -19,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @RequestMapping("/api/payments")
 public class PaymentController {
-    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
     @GetMapping("/sales")
     @ApiOperation("Get sales")
@@ -28,7 +28,7 @@ public class PaymentController {
             @ApiResponse(code = 403, message = "Role is invalid (SHOP)")
     })
     public List<PaymentDTO> getSales(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return paymentRepository.findAllByShopId(userPrincipal.id())
+        return paymentService.findAllByShopId(userPrincipal.id())
                 .stream()
                 .map(Payment::toDTO)
                 .toList();
@@ -41,7 +41,7 @@ public class PaymentController {
             @ApiResponse(code = 403, message = "Role is invalid (SHOP AND CLIENT)")
     })
     public List<PaymentDTO> getPurchases(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return paymentRepository.findAllByPurchaserId(userPrincipal.id())
+        return paymentService.findAllByPurchaserId(userPrincipal.id())
                 .stream()
                 .map(Payment::toDTO)
                 .toList();

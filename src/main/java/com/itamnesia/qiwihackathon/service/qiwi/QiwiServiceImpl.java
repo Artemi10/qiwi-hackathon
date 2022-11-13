@@ -6,7 +6,7 @@ import com.itamnesia.qiwihackathon.model.user.User;
 import com.itamnesia.qiwihackathon.repository.PaymentRepository;
 import com.itamnesia.qiwihackathon.repository.UserRepository;
 import com.itamnesia.qiwihackathon.security.token.AccessTokenService;
-import com.itamnesia.qiwihackathon.service.payment.PaymentService;
+import com.itamnesia.qiwihackathon.service.transaction.TransactionService;
 import com.itamnesia.qiwihackathon.transfer.auth.TokenDTO;
 import com.itamnesia.qiwihackathon.transfer.payment.PaymentRequest;
 import com.itamnesia.qiwihackathon.transfer.payment.PaymentResponse;
@@ -35,21 +35,21 @@ public class QiwiServiceImpl implements QiwiService {
     @Value("${qiwi.auth.siteId}")
     private String siteId;
 
-    private final PaymentService paymentService;
+    private final TransactionService transactionService;
     private final AccessTokenService paymentAccessTokenService;
     private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
 
     public QiwiServiceImpl(
-            PaymentService paymentService,
+            TransactionService transactionService,
             @Qualifier("paymentAccessTokenService")
             AccessTokenService paymentAccessTokenService,
             RestTemplate restTemplate,
             UserRepository userRepository,
             PaymentRepository paymentRepository
     ) {
-        this.paymentService = paymentService;
+        this.transactionService = transactionService;
         this.paymentAccessTokenService = paymentAccessTokenService;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
@@ -58,7 +58,7 @@ public class QiwiServiceImpl implements QiwiService {
 
     @Override
     public void createPaymentRequest(long id) {
-        var user = paymentService.generatePayment(id);
+        var user = transactionService.generatePayment(id);
         var payment = new PaymentRequest(
                 user.getRequestId(),
                 user.getPhoneNumber(),
@@ -74,23 +74,23 @@ public class QiwiServiceImpl implements QiwiService {
                             PaymentResponse.class
                     );
             if (paymentResponse == null) {
-                paymentService.deletePayment(user);
+                transactionService.deletePayment(user);
                 throw new AuthException("Can not send payment request");
             }
             var status = paymentResponse.status();
             if (!"WAITING_SMS".equals(status.getValue())) {
-                paymentService.deletePayment(user);
+                transactionService.deletePayment(user);
                 throw new AuthException("Can not send payment request");
             }
         } catch (Exception e) {
-            paymentService.deletePayment(user);
+            transactionService.deletePayment(user);
             throw new AuthException("Can not send payment request");
         }
     }
 
     @Override
     public TokenDTO confirmPayment(long id, String code) {
-        var user = paymentService.getUserById(id);
+        var user = transactionService.getUserById(id);
         var confirmation = new PaymentConfirmationRequest(
                 user.getRequestId(),
                 code
@@ -105,18 +105,18 @@ public class QiwiServiceImpl implements QiwiService {
                             PaymentConfirmationResponse.class
                     );
             if (paymentResponse == null) {
-                paymentService.deletePayment(user);
+                transactionService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
             var status = paymentResponse.status();
             if (!"CREATED".equals(status.getValue())) {
-                paymentService.deletePayment(user);
+                transactionService.deletePayment(user);
                 throw new AuthException("Can not send payment confirmation request");
             }
-            var paymentUser = paymentService.startPayment(user, paymentResponse.token().value());
+            var paymentUser = transactionService.startPayment(user, paymentResponse.token().value());
             return new TokenDTO(paymentAccessTokenService.createToken(paymentUser));
         } catch (Exception e) {
-            paymentService.deletePayment(user);
+            transactionService.deletePayment(user);
             throw new AuthException("Can not send payment confirmation request");
         }
     }
@@ -172,7 +172,7 @@ public class QiwiServiceImpl implements QiwiService {
                     body,
                     Void.class
             );
-            paymentService.deletePayment(user);
+            transactionService.deletePayment(user);
         } catch (Exception exception) {
             throw new AuthException("Can not delete payment token");
         }
